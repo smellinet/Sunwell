@@ -124,6 +124,7 @@ target_link_libraries(mmaps_generator
   g3dlib
   Recast
   Detour
+	${CMAKE_THREAD_LIBS_INIT}
   ${ACE_LIBRARY}
   ${MYSQL_LIBRARY}
   ${OPENSSL_LIBRARIES}

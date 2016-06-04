@@ -71,19 +71,50 @@ ChatCommand* ChatHandler::getCommandTable()
 
         {
             // count total number of top-level commands
+			/*
+			   bad code  SME
             size_t total = 0;
             std::vector<ChatCommand*> const& dynamic = sScriptMgr->GetChatCommands();
             for (std::vector<ChatCommand*>::const_iterator it = dynamic.begin(); it != dynamic.end(); ++it)
                 total += getCommandTableSize(*it);
             total += 1; // ending zero
 
-            // cache top-level commands
-            size_t added = 0;
+            //cache top-level commands
+            size_t added = 0; 
             commandTableCache = (ChatCommand*)malloc(sizeof(ChatCommand) * total);
             memset(commandTableCache, 0, sizeof(ChatCommand) * total);
             ACE_ASSERT(commandTableCache);
             for (std::vector<ChatCommand*>::const_iterator it = dynamic.begin(); it != dynamic.end(); ++it)
                 added += appendCommandTable(commandTableCache + added, *it);
+			*/
+			
+            size_t total = 0;
+            std::vector<ChatCommand*> const& dynamic = sScriptMgr->GetChatCommands();
+            for (std::vector<ChatCommand*>::const_iterator it = dynamic.begin(); it != dynamic.end(); ++it)
+                total += getCommandTableSize(*it);
+            total += 1; // ending zero
+			
+			commandTableCache = new ChatCommand[total];
+			
+			size_t cptCmd=0;
+			for (std::vector<ChatCommand*>::const_iterator it = dynamic.begin(); it != dynamic.end(); ++it) {
+				ChatCommand *cht = *it;
+				int count = 0;
+				while (cht[count].Name != NULL) {
+					commandTableCache[cptCmd++] = cht[count];
+					count++;
+				}
+			}
+			ChatCommand *cht = new ChatCommand();
+			commandTableCache[cptCmd] = 	*cht;
+			commandTableCache[cptCmd].Name = NULL;
+			commandTableCache[cptCmd].SecurityLevel = SEC_PLAYER;
+			commandTableCache[cptCmd].AllowConsole = false;
+			commandTableCache[cptCmd].Help="";
+			commandTableCache[cptCmd].ChildCommands = NULL;
+			commandTableCache[cptCmd].Handler = NULL;
+			
+			 
         }
 
         PreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_COMMANDS);
@@ -94,8 +125,9 @@ ChatCommand* ChatHandler::getCommandTable()
             {
                 Field* fields = result->Fetch();
                 std::string name = fields[0].GetString();
+                std::string help = fields[2].GetString();
 
-                SetDataForCommandInTable(commandTableCache, name.c_str(), fields[1].GetUInt8(), fields[2].GetString(), name);
+                SetDataForCommandInTable(commandTableCache, name.c_str(), fields[1].GetUInt8(), help, name);
             }
             while (result->NextRow());
         }
